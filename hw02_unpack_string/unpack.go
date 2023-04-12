@@ -4,38 +4,41 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"golang.org/x/example/stringutil"
 )
 
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(input string) (string, error) {
-	var isNumber bool
+	var twoDigitsInARow bool
+	var previousChar string
 	var output strings.Builder
 
-	repeatCount := 1
-
-	// unpack string from its end to beginning
-	for i, char := range stringutil.Reverse(input) {
-		if digit, err := strconv.Atoi(string(char)); err == nil {
+	for i, char := range input {
+		currentChar := string(char)
+		repeatCount, err := strconv.Atoi(currentChar)
+		if err != nil {
+			if !twoDigitsInARow {
+				output.WriteString(previousChar)
+			}
 			if i == len(input)-1 {
-				return "", ErrInvalidString
+				output.WriteString(currentChar)
 			}
 
-			if isNumber {
-				return "", ErrInvalidString
-			}
-
-			repeatCount = digit
-			isNumber = true
+			previousChar = currentChar
+			twoDigitsInARow = false
 			continue
 		}
 
-		output.WriteString(strings.Repeat(string(char), repeatCount))
-		repeatCount = 1
-		isNumber = false
+		if i == 0 {
+			return "", ErrInvalidString
+		}
+		if twoDigitsInARow {
+			return "", ErrInvalidString
+		}
+
+		output.WriteString(strings.Repeat(previousChar, repeatCount))
+		twoDigitsInARow = true
 	}
 
-	return stringutil.Reverse(output.String()), nil
+	return output.String(), nil
 }
