@@ -12,17 +12,13 @@ var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(input string) (string, error) {
 	var isNumber bool
-	var repeatCount int
 	var output strings.Builder
+
+	repeatCount := 1
 
 	// unpack string from its end to beginning
 	for i, char := range stringutil.Reverse(input) {
-		digit, err := strconv.Atoi(string(char))
-		if i == 0 && err != nil {
-			output.WriteString(string(char))
-		}
-
-		if err == nil {
+		if digit, err := strconv.Atoi(string(char)); err == nil {
 			if i == len(input)-1 {
 				return "", ErrInvalidString
 			}
