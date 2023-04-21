@@ -11,7 +11,7 @@ type topWord struct {
 }
 
 func Top10(text string) []string {
-	var wordsCount = 10
+	wordsCount := 10
 
 	if text == "" {
 		return []string{}
