@@ -11,7 +11,7 @@ type topWord struct {
 }
 
 func Top10(text string) []string {
-	const wordsCount = 10
+	var wordsCount = 10
 
 	if text == "" {
 		return []string{}
@@ -31,6 +31,10 @@ func Top10(text string) []string {
 		}
 		return topWords[i].frequency > topWords[j].frequency
 	})
+
+	if len(topWords) < wordsCount {
+		wordsCount = len(topWords)
+	}
 
 	result := make([]string, 0, wordsCount)
 	for i := 0; i < wordsCount; i++ {

@@ -44,6 +44,8 @@ var text2 = "кот кошка собака щенок енот кролик л�
 
 var text3 = "Кот кот кот, Лев лев лев. Енот енот енот! Жираф жираф жираф?"
 
+var text4 = "кот кошка собака щенок"
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
@@ -95,5 +97,15 @@ func TestTop10(t *testing.T) {
 			"кот,",   // 1
 		}
 		require.Equal(t, expected, Top10(text3))
+	})
+
+	t.Run("less then 10 test", func(t *testing.T) {
+		expected := []string{
+			"кот",    // 1
+			"кошка",  // 1
+			"собака", // 1
+			"щенок",  // 1
+		}
+		require.Equal(t, expected, Top10(text4))
 	})
 }
