@@ -5,49 +5,34 @@ import (
 	"strings"
 )
 
-type topWord struct {
-	word      string
-	frequency int
-}
-
 func Top10(text string) []string {
-	wordsCount := 10
+	const topWordsCount = 10
 
 	if text == "" {
-		return []string{}
+		return nil
 	}
 
 	words := strings.Fields(text)
-	uniqueWords := getUniqueWords(words)
-	topWords := make([]topWord, 0, len(uniqueWords))
 
-	for word, freq := range uniqueWords {
-		topWords = append(topWords, topWord{word: word, frequency: freq})
-	}
-
-	sort.Slice(topWords, func(i, j int) bool {
-		if topWords[i].frequency == topWords[j].frequency {
-			return topWords[i].word < topWords[j].word
-		}
-		return topWords[i].frequency > topWords[j].frequency
-	})
-
-	if len(topWords) < wordsCount {
-		wordsCount = len(topWords)
-	}
-
-	result := make([]string, 0, wordsCount)
-	for i := 0; i < wordsCount; i++ {
-		result = append(result, topWords[i].word)
-	}
-
-	return result
-}
-
-func getUniqueWords(words []string) map[string]int {
 	uniqueWords := make(map[string]int)
 	for _, word := range words {
 		uniqueWords[word]++
 	}
-	return uniqueWords
+
+	topWords := make([]string, 0, len(uniqueWords))
+	for word := range uniqueWords {
+		topWords = append(topWords, word)
+	}
+
+	sort.Slice(topWords, func(i, j int) bool {
+		if uniqueWords[topWords[i]] == uniqueWords[topWords[j]] {
+			return topWords[i] < topWords[j]
+		}
+		return uniqueWords[topWords[i]] > uniqueWords[topWords[j]]
+	})
+
+	if len(topWords) < topWordsCount {
+		return topWords
+	}
+	return topWords[:topWordsCount]
 }
