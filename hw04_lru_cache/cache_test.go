@@ -1,9 +1,6 @@
 package hw04lrucache
 
 import (
-	"math/rand"
-	"strconv"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -49,31 +46,60 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+	t.Run("replacement", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, val)
+
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
+		c.Set("ddd", 400)
+
+		val, ok = c.Get("aaa")
+		require.False(t, ok)
+		require.Nil(t, val)
 	})
-}
 
-func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove me if task with asterisk completed.
+	t.Run("replacement unused items", func(t *testing.T) {
+		c := NewCache(3)
 
-	c := NewCache(10)
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 1_000_000; i++ {
-			c.Set(Key(strconv.Itoa(i)), i)
-		}
-	}()
+		c.Set("bbb", 400)
+		c.Get("aaa")
+		c.Set("ccc", 500)
+		c.Get("aaa")
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 1_000_000; i++ {
-			c.Get(Key(strconv.Itoa(rand.Intn(1_000_000))))
-		}
-	}()
+		c.Set("ddd", 600)
 
-	wg.Wait()
+		val, ok := c.Get("bbb")
+		require.False(t, ok)
+		require.Nil(t, val)
+
+		c.Set("eee", 700)
+
+		val, ok = c.Get("ccc")
+		require.False(t, ok)
+		require.Nil(t, val)
+	})
+
+	t.Run("clear", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, val)
+
+		c.Clear()
+		val, ok = c.Get("aaa")
+		require.False(t, ok)
+		require.Nil(t, val)
+	})
 }

@@ -15,6 +15,37 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("nil input", func(t *testing.T) {
+		l := NewList()
+
+		require.NotPanics(t, func() { l.Remove(nil) })
+		require.NotPanics(t, func() { l.MoveToFront(nil) })
+	})
+
+	t.Run("first push front/back", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10)
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 10, l.Back().Value)
+		l.Remove(l.Front())
+
+		l.PushBack(20)
+		require.Equal(t, 20, l.Front().Value)
+		require.Equal(t, 20, l.Back().Value)
+		l.Remove(l.Back())
+	})
+
+	t.Run("remove last item", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10)
+		l.Remove(l.Front())
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
@@ -40,7 +71,9 @@ func TestList(t *testing.T) {
 		require.Equal(t, 70, l.Back().Value)
 
 		l.MoveToFront(l.Front()) // [80, 60, 40, 10, 30, 50, 70]
-		l.MoveToFront(l.Back())  // [70, 80, 60, 40, 10, 30, 50]
+		require.Equal(t, 80, l.Front().Value)
+		l.MoveToFront(l.Back()) // [70, 80, 60, 40, 10, 30, 50]
+		require.Equal(t, 70, l.Front().Value)
 
 		elems := make([]int, 0, l.Len())
 		for i := l.Front(); i != nil; i = i.Next {
