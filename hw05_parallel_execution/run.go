@@ -46,8 +46,8 @@ func Run(tasks []Task, n, m int) error {
 	}
 
 	go func() {
+		defer close(resultCh)
 		wg.Wait()
-		close(resultCh)
 	}()
 
 	errorsCounter := 0
