@@ -33,17 +33,17 @@ func Run(tasks []Task, n, m int) error {
 	wg := sync.WaitGroup{}
 	wg.Add(n)
 
-	for _, task := range tasks {
-		tasksCh <- task
-	}
-	close(tasksCh)
-
 	for i := 0; i < n; i++ {
 		go func() {
 			defer wg.Done()
 			worker(tasksCh, resultCh, stopCh)
 		}()
 	}
+
+	for _, task := range tasks {
+		tasksCh <- task
+	}
+	close(tasksCh)
 
 	go func() {
 		defer close(resultCh)
