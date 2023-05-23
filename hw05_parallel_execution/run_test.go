@@ -15,6 +15,32 @@ import (
 func TestRun(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
+	t.Run("empty tasks list", func(t *testing.T) {
+		err := Run(nil, 1, 1)
+		require.Truef(t, errors.Is(err, ErrEmptyTasksList), "actual err - %v", err)
+	})
+
+	t.Run("workers count <= 0", func(t *testing.T) {
+		tasks := []Task{func() error {
+			return nil
+		}}
+
+		err := Run(tasks, 0, 1)
+		require.Truef(t, errors.Is(err, ErrMinGoroutinesNumber), "actual err - %v", err)
+	})
+
+	t.Run("errors count <= 0", func(t *testing.T) {
+		tasks := []Task{func() error {
+			return nil
+		}}
+
+		err := Run(tasks, 1, -1)
+		require.Truef(t, errors.Is(err, ErrMinErrorsNumber), "actual err - %v", err)
+
+		err = Run(tasks, 1, 0)
+		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
+	})
+
 	t.Run("if were errors in first M tasks, than finished not more N+M tasks", func(t *testing.T) {
 		tasksCount := 50
 		tasks := make([]Task, 0, tasksCount)
