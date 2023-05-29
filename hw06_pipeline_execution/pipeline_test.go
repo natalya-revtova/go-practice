@@ -46,7 +46,7 @@ func TestPipeline(t *testing.T) {
 
 	t.Run("nil stages list", func(t *testing.T) {
 		result := make([]string, 0, 10)
-		for s := range ExecutePipeline(make(Bi), nil, nil) {
+		for s := range ExecutePipeline(make(Bi), nil) {
 			result = append(result, s.(string))
 		}
 		require.Len(t, result, 0)

@@ -18,7 +18,7 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	if in == nil {
 		return emptyOut()
 	}
-	if len(stages) == 1 && stages[0] == nil {
+	if stages == nil {
 		return emptyOut()
 	}
 
