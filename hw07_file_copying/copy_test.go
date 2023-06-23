@@ -36,7 +36,6 @@ func TestCopy_Success(t *testing.T) {
 		hashOutResult, _ := getHash(tt.dest)
 		hashOutTest, _ := getHash(tt.want)
 		require.Equal(t, hashOutResult, hashOutTest)
-
 	}
 }
 
