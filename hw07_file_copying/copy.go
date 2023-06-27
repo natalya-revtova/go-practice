@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -15,7 +16,21 @@ var (
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	if fromPath == "" || toPath == "" || fromPath == toPath {
+	if fromPath == "" || toPath == "" {
+		return ErrUnsupportedFile
+	}
+
+	fromPathAbs, err := filepath.Abs(fromPath)
+	if err != nil {
+		return err
+	}
+
+	toPathAbs, err := filepath.Abs(toPath)
+	if err != nil {
+		return err
+	}
+
+	if fromPathAbs == toPathAbs {
 		return ErrUnsupportedFile
 	}
 
