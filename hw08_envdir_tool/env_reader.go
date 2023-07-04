@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const UnsupportedSymbol = "="
+const unsupportedSymbol = "="
 
 var ErrUnsupportedFileName = errors.New("file name contains unsupported symbol '='")
 
@@ -42,7 +42,7 @@ func ReadDir(dir string) (Environment, error) {
 			continue
 		}
 
-		if strings.Contains(finfo.Name(), UnsupportedSymbol) {
+		if strings.Contains(finfo.Name(), unsupportedSymbol) {
 			return nil, fmt.Errorf("%q: %w", finfo.Name(), ErrUnsupportedFileName)
 		}
 

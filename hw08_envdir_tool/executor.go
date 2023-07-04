@@ -37,6 +37,8 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 
 	command := exec.Command(cmd[0], args...) //nolint:gosec
 	command.Stdout = os.Stdout
+	command.Stdin = os.Stdin
+	command.Stderr = os.Stderr
 
 	err := command.Run()
 	if err != nil {
