@@ -50,27 +50,27 @@ func Validate(v interface{}) error {
 
 	for i := 0; i < typeOfValue.NumField(); i++ {
 		field := typeOfValue.Field(i)
-		tag, ok := field.Tag.Lookup("validate")
+		tags, ok := field.Tag.Lookup("validate")
 		if !ok {
 			continue
 		}
 
-		params := strings.Split(tag, "|")
+		params := strings.Split(tags, "|")
 		for _, param := range params {
-			elems := strings.Split(param, ":")
+			tag := strings.Split(param, ":")
 
 			var err error
-			switch elems[0] {
+			switch tag[0] {
 			case "min":
-				err = validateMin(elems[1], field, value.Field(i))
+				err = validateMin(tag[1], field, value.Field(i))
 			case "max":
-				err = validateMax(elems[1], field, value.Field(i))
+				err = validateMax(tag[1], field, value.Field(i))
 			case "len":
-				err = validateLen(elems[1], field, value.Field(i))
+				err = validateLen(tag[1], field, value.Field(i))
 			case "in":
-				err = validateIn(elems[1], field, value.Field(i))
+				err = validateIn(tag[1], field, value.Field(i))
 			case "regexp":
-				err = validateRegexp(elems[1], field, value.Field(i))
+				err = validateRegexp(tag[1], field, value.Field(i))
 			default:
 				return ErrInvalidParam
 			}
