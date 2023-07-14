@@ -39,7 +39,6 @@ func main() {
 
 	go func() {
 		tc.Send()
-		fmt.Println("...EOF")
 		stop()
 	}()
 
