@@ -34,26 +34,18 @@ func main() {
 	}
 	defer tc.Close()
 
-	signalCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-
-	exitCtx, exit := context.WithCancel(context.Background())
-	defer exit()
-
-	go func() {
-		<-signalCtx.Done()
-		exit()
-	}()
 
 	go func() {
 		tc.Send()
-		exit()
+		stop()
 	}()
 
 	go func() {
 		tc.Receive()
-		exit()
+		stop()
 	}()
 
-	<-exitCtx.Done()
+	<-ctx.Done()
 }
