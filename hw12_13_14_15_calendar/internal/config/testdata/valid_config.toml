@@ -5,13 +5,13 @@ timeout = "4s"
 idle_timeout = "30s"
 
 [storage]
-type = "in-memory"
+type = "sql"
 
 [database]
 host="127.0.0.1"
 port=5432
 username="postgres"
-password="ChangeMe"
+password="postgres"
 database="calendar"
 
 [logger]
