@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/app"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/config"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/logger"
@@ -17,7 +16,6 @@ import (
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage/sql"
-	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/migrations"
 )
 
 var configFile string
@@ -42,7 +40,7 @@ func main() {
 
 	log := logger.New(config.Logger.Level)
 
-	storage, dbConn, err := initStorage(log, config.Storage.Type, &config.Database)
+	storage, closeDBConn, err := initStorage(config.Storage.Type, &config.Database)
 	if err != nil {
 		log.Error("Init storage", "error", err)
 		os.Exit(1)
@@ -59,8 +57,8 @@ func main() {
 	go func() {
 		<-ctx.Done()
 
-		if dbConn != nil {
-			if err := dbConn.Close(); err != nil {
+		if closeDBConn != nil {
+			if err := closeDBConn(); err != nil {
 				log.Error("Close connection to database", "error", err)
 			}
 		}
@@ -82,7 +80,9 @@ func main() {
 	}
 }
 
-func initStorage(logger app.Logger, storageType string, config *config.DatabaseConfig) (app.Storage, *sqlx.DB, error) {
+type CloseConnFn func() error
+
+func initStorage(storageType string, config *config.DatabaseConfig) (app.Storage, CloseConnFn, error) {
 	switch storageType {
 	case storage.InMemory:
 		return memorystorage.New(), nil, nil
@@ -92,13 +92,7 @@ func initStorage(logger app.Logger, storageType string, config *config.DatabaseC
 		if err != nil {
 			return nil, nil, err
 		}
-
-		err = sqlstorage.RunMigrations(dbConn.DB, migrations.MigrationFiles, logger)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return sqlstorage.New(dbConn), dbConn, nil
+		return sqlstorage.New(dbConn), func() error { return dbConn.Close() }, nil
 
 	default:
 		return nil, nil, fmt.Errorf("invalid storage type")

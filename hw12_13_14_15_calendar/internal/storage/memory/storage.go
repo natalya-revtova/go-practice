@@ -10,21 +10,26 @@ import (
 )
 
 type (
-	ID     = string
-	Events map[ID]storage.Event
-	Dates  map[time.Time]map[ID]struct{}
+	id = string
+
+	events map[id]storage.Event
+	dates  map[time.Time]map[id]struct{}
 )
 
 type Storage struct {
-	events Events
-	dates  Dates
+	events events
+	days   dates
+	weeks  dates
+	months dates
 	mu     sync.RWMutex
 }
 
 func New() *Storage {
 	return &Storage{
-		events: make(Events),
-		dates:  make(Dates),
+		events: make(events),
+		days:   make(dates),
+		weeks:  make(dates),
+		months: make(dates),
 	}
 }
 
@@ -39,27 +44,26 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	defer s.mu.Unlock()
 
 	s.events[event.ID] = event
-	s.saveEventDate(event.StartDate, event.EndDate, event.ID)
+	s.saveDates(event.ID, event.Day, event.Week, event.Month)
 
 	return nil
 }
 
-func (s *Storage) saveEventDate(start, end time.Time, eventID string) {
-	startDate := getDate(start)
-	endDate := getDate(end)
-
-	startDate = startDate.AddDate(0, 0, -1) // if event starts and ends in the same day
-	for startDate != endDate {
-		startDate = startDate.AddDate(0, 0, 1)
-		if _, ok := s.dates[startDate]; !ok {
-			s.dates[startDate] = make(map[ID]struct{})
-		}
-		s.dates[startDate][eventID] = struct{}{}
+func (s *Storage) saveDates(eventID string, day, week, month time.Time) {
+	if _, ok := s.days[day]; !ok {
+		s.days[day] = make(map[id]struct{})
 	}
-}
+	s.days[day][eventID] = struct{}{}
 
-func getDate(eventDate time.Time) time.Time {
-	return time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.Local)
+	if _, ok := s.weeks[week]; !ok {
+		s.weeks[week] = make(map[id]struct{})
+	}
+	s.weeks[week][eventID] = struct{}{}
+
+	if _, ok := s.months[month]; !ok {
+		s.months[month] = make(map[id]struct{})
+	}
+	s.months[month][eventID] = struct{}{}
 }
 
 func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
@@ -69,18 +73,16 @@ func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
 	default:
 	}
 
-	s.mu.RLock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	updated, ok := s.events[event.ID]
 	if !ok {
 		return storage.ErrEventNotExist
 	}
-	s.mu.RUnlock()
 
 	updateEventFields(&updated, event)
-
-	s.mu.Lock()
 	s.events[event.ID] = updated
-	s.mu.Unlock()
 
 	return nil
 }
@@ -94,6 +96,9 @@ func updateEventFields(updated *storage.Event, event storage.Event) {
 	}
 	if !event.StartDate.IsZero() {
 		updated.StartDate = event.StartDate
+		updated.Day = event.Day
+		updated.Week = event.Week
+		updated.Month = event.Month
 	}
 	if !event.EndDate.IsZero() {
 		updated.EndDate = event.EndDate
@@ -110,90 +115,87 @@ func (s *Storage) DeleteEvent(ctx context.Context, eventID string) error {
 	default:
 	}
 
-	s.mu.RLock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	deleted, ok := s.events[eventID]
 	if !ok {
 		return storage.ErrEventNotExist
 	}
-	s.mu.RUnlock()
 
-	s.mu.Lock()
-	s.deleteEventDate(deleted.StartDate, deleted.EndDate, eventID)
+	s.deleteDates(eventID, deleted.Day, deleted.Week, deleted.Month)
 	delete(s.events, eventID)
-	s.mu.Unlock()
 
 	return nil
 }
 
-func (s *Storage) deleteEventDate(start, end time.Time, eventID string) {
-	startDate := getDate(start)
-	endDate := getDate(end)
-
-	startDate = startDate.AddDate(0, 0, -1) // if event starts and ends in the same day
-	for startDate != endDate {
-		startDate = startDate.AddDate(0, 0, 1)
-		delete(s.dates[startDate], eventID)
+func (s *Storage) deleteDates(eventID string, day, week, month time.Time) {
+	delete(s.days[day], eventID)
+	if len(s.days[day]) == 0 {
+		delete(s.days, day)
 	}
-	if len(s.dates[startDate]) == 0 {
-		delete(s.dates, startDate)
+
+	delete(s.weeks[week], eventID)
+	if len(s.weeks[week]) == 0 {
+		delete(s.weeks, week)
+	}
+
+	delete(s.months[month], eventID)
+	if len(s.months[month]) == 0 {
+		delete(s.months, month)
 	}
 }
 
-func (s *Storage) GetEventByDay(ctx context.Context, userID int64, date time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByDay(ctx context.Context, userID int64, day time.Time) ([]storage.Event, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.getEventByPeriod(ctx, userID, date, date)
+	return s.getSortedEventsByIDs(userID, s.days[day]), nil
 }
 
-func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, date time.Time) ([]storage.Event, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.getEventByPeriod(ctx, userID, date, date.AddDate(0, 0, 7))
-}
-
-func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, date time.Time) ([]storage.Event, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.getEventByPeriod(ctx, userID, date, date.AddDate(0, 1, 0))
-}
-
-func (s *Storage) getEventByPeriod(ctx context.Context, userID int64, start, end time.Time) ([]storage.Event, error) {
-	dates := make(map[ID]struct{}, 0)
-
-	start = start.AddDate(0, 0, -1) // for period == one day
-	for start != end {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		start = start.AddDate(0, 0, 1)
-		dayEvents, ok := s.dates[start]
-		if !ok {
-			continue
-		}
-
-		for id := range dayEvents {
-			if _, ok := dates[id]; !ok {
-				if s.events[id].UserID == userID {
-					dates[id] = struct{}{}
-				}
-			}
-		}
+func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, week time.Time) ([]storage.Event, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
 	}
 
-	if len(dates) == 0 {
-		return nil, nil
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.getSortedEventsByIDs(userID, s.weeks[week]), nil
+}
+
+func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.Time) ([]storage.Event, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
 	}
 
-	events := make([]storage.Event, 0, len(dates))
-	for id := range dates {
-		events = append(events, s.events[id])
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.getSortedEventsByIDs(userID, s.months[month]), nil
+}
+
+func (s *Storage) getSortedEventsByIDs(userID int64, ids map[id]struct{}) []storage.Event {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	events := make([]storage.Event, 0, len(ids))
+	for id := range ids {
+		if userID == s.events[id].UserID {
+			events = append(events, s.events[id])
+		}
 	}
 
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].StartDate.Before(events[j].StartDate)
 	})
-	return events, nil
+	return events
 }

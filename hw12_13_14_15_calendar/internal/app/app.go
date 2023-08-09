@@ -41,8 +41,8 @@ func New(logger Logger, storage Storage) *App {
 }
 
 func (a *App) CreateEvent(ctx context.Context, event Event) error {
-	events, err := a.storage.GetEventByDay(ctx, event.UserID, getStartDate(event.StartDate))
-	if err != nil && !errors.Is(err, storage.ErrNoEventsFound) {
+	events, err := a.storage.GetEventByDay(ctx, event.UserID, getDay(event.StartDate))
+	if err != nil {
 		return err
 	}
 
@@ -66,19 +66,13 @@ func (a *App) CreateEvent(ctx context.Context, event Event) error {
 	return nil
 }
 
-func getStartDate(eventDate time.Time) time.Time {
-	return time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.Local)
-}
-
 func busy(newStart, newEnd, oldStart, oldEnd time.Time) bool {
 	return (newStart.After(oldStart) && newStart.Before(oldEnd)) ||
 		(newEnd.After(oldStart) && newEnd.Before(oldEnd)) ||
 		(newStart.Before(oldStart) && newEnd.After(oldEnd))
 }
 
-func (a *App) UpdateEvent(ctx context.Context, eventID string, event Event) error {
-	event.ID = eventID
-
+func (a *App) UpdateEvent(ctx context.Context, event Event) error {
 	if err := a.storage.UpdateEvent(ctx, event.ToStorageModel()); err != nil {
 		a.log.Error("Can not update event", "event_id", event.ID, "error", err)
 		return err

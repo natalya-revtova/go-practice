@@ -4,6 +4,12 @@ DOCKER_IMG="calendar:develop"
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
+DB_USER = $(CALENDAR_DB_USER)
+DB_PSSWD = $(CALENDAR_DB_PSSWD)
+DB_HOST := $(CALENDAR_DB_HOST)
+DB_PORT := 5432
+DB_NAME := calendar
+
 build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
@@ -30,5 +36,8 @@ install-lint-deps:
 
 lint: install-lint-deps
 	golangci-lint run ./...
+
+migrate:
+	 cd migrations && goose postgres "host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USER) password=$(DB_PSSWD) dbname=$(DB_NAME)" up
 
 .PHONY: build run build-img run-img version test lint

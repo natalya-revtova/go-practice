@@ -15,7 +15,7 @@ import (
 
 type Application interface {
 	CreateEvent(context.Context, app.Event) error
-	UpdateEvent(context.Context, string, app.Event) error
+	UpdateEvent(context.Context, app.Event) error
 	DeleteEvent(context.Context, string) error
 	GetEventByDay(context.Context, int64, time.Time) ([]app.Event, error)
 	GetEventByWeek(context.Context, int64, time.Time) ([]app.Event, error)

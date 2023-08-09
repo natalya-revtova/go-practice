@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
+	"github.com/snabb/isoweek"
 )
 
 type Event struct {
@@ -25,7 +26,23 @@ func (e Event) ToStorageModel() storage.Event {
 		StartDate:        e.StartDate,
 		EndDate:          e.EndDate,
 		NotificationTime: e.NotificationTime,
+		Day:              getDay(e.StartDate),
+		Week:             getWeek(e.StartDate),
+		Month:            getMonth(e.StartDate),
 	}
+}
+
+func getDay(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func getWeek(date time.Time) time.Time {
+	year, week := date.ISOWeek()
+	return isoweek.StartTime(year, week, time.UTC)
+}
+
+func getMonth(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), 0, 0, 0, 0, 0, time.UTC)
 }
 
 type Events []Event

@@ -23,4 +23,8 @@ type Event struct {
 	StartDate        time.Time      `db:"start_date"`
 	EndDate          time.Time      `db:"end_date"`
 	NotificationTime *time.Duration `db:"notification_time"`
+
+	Day   time.Time `db:"day"`
+	Week  time.Time `db:"week"`
+	Month time.Time `db:"month"`
 }
