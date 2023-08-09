@@ -2,14 +2,11 @@ package app
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
 )
-
-var ErrTimeBusy = errors.New("time is busy")
 
 type Logger interface {
 	With(args ...any) Logger
