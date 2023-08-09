@@ -41,24 +41,7 @@ func New(logger Logger, storage Storage) *App {
 }
 
 func (a *App) CreateEvent(ctx context.Context, event Event) error {
-	events, err := a.storage.GetEventByDay(ctx, event.UserID, getDay(event.StartDate))
-	if err != nil {
-		return err
-	}
-
-	for i := range events {
-		if busy(event.StartDate, event.EndDate, events[i].StartDate, events[i].EndDate) {
-			a.log.Warn(
-				"The selected time is already busy",
-				"event_id", events[i].ID,
-				"start", events[i].StartDate,
-				"end", events[i].EndDate)
-			return ErrTimeBusy
-		}
-	}
-
 	event.ID = generateEventID()
-
 	if err := a.storage.CreateEvent(ctx, event.ToStorageModel()); err != nil {
 		a.log.Error("Can not add event to storage", "event_id", event.ID, "error", err)
 		return err
@@ -66,10 +49,8 @@ func (a *App) CreateEvent(ctx context.Context, event Event) error {
 	return nil
 }
 
-func busy(newStart, newEnd, oldStart, oldEnd time.Time) bool {
-	return (newStart.After(oldStart) && newStart.Before(oldEnd)) ||
-		(newEnd.After(oldStart) && newEnd.Before(oldEnd)) ||
-		(newStart.Before(oldStart) && newEnd.After(oldEnd))
+func generateEventID() string {
+	return uuid.New().String()
 }
 
 func (a *App) UpdateEvent(ctx context.Context, event Event) error {
@@ -116,8 +97,4 @@ func (a *App) GetEventByMonth(ctx context.Context, userID int64, month time.Time
 	}
 	result := make(Events, len(events))
 	return result.FromStorageModel(events), nil
-}
-
-func generateEventID() string {
-	return uuid.New().String()
 }
