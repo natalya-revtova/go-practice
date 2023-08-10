@@ -11,7 +11,7 @@ type = "sql"
 host="127.0.0.1"
 port=5432
 username="postgres"
-password="ChangeMe"
+password="postgres"
 database="calendar"
 
 [logger]
