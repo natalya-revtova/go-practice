@@ -28,12 +28,8 @@ func NewServer(log logger.ILogger, app server.Calendar, cfg *config.ServerHTTPCo
 	}
 }
 
-func (s *Server) Start(ctx context.Context) error {
-	if err := s.srv.ListenAndServe(); err != nil {
-		<-ctx.Done()
-		return err
-	}
-	return nil
+func (s *Server) Start() error {
+	return s.srv.ListenAndServe()
 }
 
 func (s *Server) Stop(ctx context.Context) error {

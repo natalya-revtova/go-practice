@@ -18,12 +18,13 @@ import (
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage/sql"
+	"golang.org/x/exp/slog"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "../../configs/config.toml", "Path to configuration file")
 }
 
 func main() {
@@ -76,26 +77,26 @@ func main() {
 		serverGRPC.Stop()
 	}()
 
-	log.Info("Calendar is running...")
+	log.Info("Calendar is running...",
+		slog.String("http/server", fmt.Sprintf("%s:%d", config.ServerHTTP.Host, config.ServerHTTP.Port)),
+		slog.String("grpc/server", fmt.Sprintf("%s:%d", config.ServerGRPC.Host, config.ServerGRPC.Port)))
 
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
-		if err := serverHTTP.Start(ctx); err != nil {
+		if err := serverHTTP.Start(); err != nil {
 			log.Error("Start http server", "error", err)
 			cancel()
-			os.Exit(1)
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		if err := serverGRPC.Start(ctx, &config.ServerGRPC); err != nil {
+		if err := serverGRPC.Start(&config.ServerGRPC); err != nil {
 			log.Error("Start grpc server", "error", err)
 			cancel()
-			os.Exit(1)
 		}
 	}()
 

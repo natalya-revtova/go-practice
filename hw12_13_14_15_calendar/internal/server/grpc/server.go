@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	"context"
 	"fmt"
 	"net"
 
@@ -45,18 +44,14 @@ func NewServer(logger logger.ILogger, app server.Calendar, cfg *config.ServerGRP
 	}
 }
 
-func (s *Server) Start(ctx context.Context, cfg *config.ServerGRPCConfig) error {
+func (s *Server) Start(cfg *config.ServerGRPCConfig) error {
 	lsn, err := net.Listen("tcp", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port))
 	if err != nil {
 		return err
 	}
 
 	calendarpb.RegisterCalendarServer(s.srv, s)
-	if err := s.srv.Serve(lsn); err != nil {
-		<-ctx.Done()
-		return err
-	}
-	return nil
+	return s.srv.Serve(lsn)
 }
 
 func (s *Server) Stop() {
