@@ -19,11 +19,19 @@ func TestNewConfig(t *testing.T) {
 			description: "correct config path & content",
 			path:        "./testdata/valid_config.toml",
 			want: Config{
-				Server: ServerConfig{
+				ServerHTTP: ServerHTTPConfig{
 					Host:        "127.0.0.1",
 					Port:        8080,
 					Timeout:     4 * time.Second,
 					IdleTimeout: 30 * time.Second,
+				},
+				ServerGRPC: ServerGRPCConfig{
+					Host:              "127.0.0.1",
+					Port:              50051,
+					MaxConnectionIdle: 60 * time.Second,
+					MaxConnectionAge:  60 * time.Second,
+					Time:              60 * time.Second,
+					Timeout:           60 * time.Second,
 				},
 				Database: DatabaseConfig{
 					Host:     "127.0.0.1",

@@ -1,6 +1,9 @@
 BIN := "./bin/calendar"
 DOCKER_IMG="calendar:develop"
 
+GOOPENAPIV2_VERSION?=v2@v2.17.0
+GOOGLEAPIS_VERSION?=v1.16.0
+
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
@@ -36,6 +39,9 @@ install-lint-deps:
 
 lint: install-lint-deps
 	golangci-lint run ./...
+
+generate:
+	go generate ./...
 
 migrate:
 	 cd migrations && goose postgres "host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USER) password=$(DB_PSSWD) dbname=$(DB_NAME)" up

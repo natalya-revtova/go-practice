@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-type ServerConfig struct {
+type ServerHTTPConfig struct {
 	Host        string        `toml:"host"`
 	Port        int           `toml:"port"`
 	Timeout     time.Duration `toml:"timeout"`
 	IdleTimeout time.Duration `toml:"idle_timeout"`
 }
 
-func (sc ServerConfig) validate() error {
+func (sc ServerHTTPConfig) validate() error {
 	if emptyString(sc.Host) {
 		return errors.New("invalid host field")
 	}

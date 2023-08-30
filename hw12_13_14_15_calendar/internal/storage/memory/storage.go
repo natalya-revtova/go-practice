@@ -6,13 +6,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/models"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
 )
 
 type (
 	id = string
 
-	events map[id]storage.Event
+	events map[id]*models.Event
 	dates  map[time.Time]map[id]struct{}
 )
 
@@ -33,7 +34,7 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
+func (s *Storage) CreateEvent(ctx context.Context, event *models.Event) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -66,7 +67,7 @@ func (s *Storage) saveDates(eventID string, day, week, month time.Time) {
 	s.months[month][eventID] = struct{}{}
 }
 
-func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
+func (s *Storage) UpdateEvent(ctx context.Context, event *models.Event) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -81,13 +82,13 @@ func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
 		return storage.ErrEventNotExist
 	}
 
-	updateEventFields(&updated, event)
+	updateEventFields(updated, event)
 	s.events[event.ID] = updated
 
 	return nil
 }
 
-func updateEventFields(updated *storage.Event, event storage.Event) {
+func updateEventFields(updated *models.Event, event *models.Event) {
 	if event.Description != nil {
 		updated.Description = event.Description
 	}
@@ -96,8 +97,14 @@ func updateEventFields(updated *storage.Event, event storage.Event) {
 	}
 	if !event.StartDate.IsZero() {
 		updated.StartDate = event.StartDate
+	}
+	if !event.Day.IsZero() {
 		updated.Day = event.Day
+	}
+	if !event.Week.IsZero() {
 		updated.Week = event.Week
+	}
+	if !event.Month.IsZero() {
 		updated.Month = event.Month
 	}
 	if !event.EndDate.IsZero() {
@@ -146,7 +153,7 @@ func (s *Storage) deleteDates(eventID string, day, week, month time.Time) {
 	}
 }
 
-func (s *Storage) GetEventByDay(ctx context.Context, userID int64, day time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByDay(ctx context.Context, userID int64, day time.Time) ([]models.Event, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -158,7 +165,7 @@ func (s *Storage) GetEventByDay(ctx context.Context, userID int64, day time.Time
 	return s.getSortedEventsByIDs(userID, s.days[day]), nil
 }
 
-func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, week time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, week time.Time) ([]models.Event, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -170,7 +177,7 @@ func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, week time.Ti
 	return s.getSortedEventsByIDs(userID, s.weeks[week]), nil
 }
 
-func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.Time) ([]models.Event, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -182,15 +189,15 @@ func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.
 	return s.getSortedEventsByIDs(userID, s.months[month]), nil
 }
 
-func (s *Storage) getSortedEventsByIDs(userID int64, ids map[id]struct{}) []storage.Event {
+func (s *Storage) getSortedEventsByIDs(userID int64, ids map[id]struct{}) []models.Event {
 	if len(ids) == 0 {
 		return nil
 	}
 
-	events := make([]storage.Event, 0, len(ids))
+	events := make([]models.Event, 0, len(ids))
 	for id := range ids {
 		if userID == s.events[id].UserID {
-			events = append(events, s.events[id])
+			events = append(events, *s.events[id])
 		}
 	}
 

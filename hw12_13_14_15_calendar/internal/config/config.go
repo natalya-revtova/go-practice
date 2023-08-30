@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	Logger   LoggerConfig   `toml:"logger"`
-	Storage  StorageConfig  `toml:"storage"`
-	Server   ServerConfig   `toml:"server"`
-	Database DatabaseConfig `toml:"database"`
+	Logger     LoggerConfig     `toml:"logger"`
+	Storage    StorageConfig    `toml:"storage"`
+	ServerHTTP ServerHTTPConfig `toml:"server_http"`
+	ServerGRPC ServerGRPCConfig `toml:"server_grpc"`
+	Database   DatabaseConfig   `toml:"database"`
 }
 
 func NewConfig(path string) (Config, error) {
@@ -35,8 +36,11 @@ func (c *Config) validate() error {
 	if err := c.Storage.validate(); err != nil {
 		return fmt.Errorf("invalid storage definition: %w", err)
 	}
-	if err := c.Server.validate(); err != nil {
-		return fmt.Errorf("invalid server definition: %w", err)
+	if err := c.ServerHTTP.validate(); err != nil {
+		return fmt.Errorf("invalid server_http definition: %w", err)
+	}
+	if err := c.ServerGRPC.validate(); err != nil {
+		return fmt.Errorf("invalid server_grpc definition: %w", err)
 	}
 	if err := c.Database.validate(); err != nil {
 		return fmt.Errorf("invalid database definition: %w", err)

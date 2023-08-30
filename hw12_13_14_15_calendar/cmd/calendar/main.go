@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
-	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/app"
+	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/calendar"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/config"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage/memory"
@@ -21,7 +23,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/home/nrevtova/Natalya/study/go-practice/hw12_13_14_15_calendar/configs/config.toml", "Path to configuration file")
 }
 
 func main() {
@@ -46,9 +48,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	calendar := app.New(log, storage)
+	calendar := calendar.New(log, storage)
 
-	server := internalhttp.NewServer(log, calendar, &config.Server)
+	server_http := internalhttp.NewServer(log, calendar, &config.ServerHTTP)
+
+	server_grpc := internalgrpc.NewServer(log, calendar, &config.ServerGRPC)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -66,23 +70,42 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := server.Stop(ctx); err != nil {
+		if err := server_http.Stop(ctx); err != nil {
 			log.Error("Stop http server", "error", err)
 		}
+
+		server_grpc.Stop()
 	}()
 
 	log.Info("Calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
-		log.Error("Start http server", "error", err)
-		cancel()
-		os.Exit(1) //nolint:gocritic
-	}
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		if err := server_http.Start(ctx); err != nil {
+			log.Error("Start http server", "error", err)
+			cancel()
+			os.Exit(1) //nolint:gocritic
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := server_grpc.Start(ctx, &config.ServerGRPC); err != nil {
+			log.Error("Start grpc server", "error", err)
+			cancel()
+			os.Exit(1) //nolint:gocritic
+		}
+	}()
+
+	wg.Wait()
 }
 
 type CloseConnFn func() error
 
-func initStorage(storageType string, config *config.DatabaseConfig) (app.Storage, CloseConnFn, error) {
+func initStorage(storageType string, config *config.DatabaseConfig) (calendar.Storage, CloseConnFn, error) {
 	switch storageType {
 	case storage.InMemory:
 		return memorystorage.New(), nil, nil

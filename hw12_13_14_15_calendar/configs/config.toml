@@ -1,11 +1,20 @@
-[server]
+[server_http]
 host = "127.0.0.1"
 port = 8080
-timeout = "4s"
+timeout = "10s"
 idle_timeout = "30s"
 
+[server_grpc]
+host = "127.0.0.1"
+port = 50051
+http_port = 8081
+max_connection_idle = "60s"
+max_connection_age = "60s"
+time = "60s"
+timeout = "60s"
+
 [storage]
-type = "sql"
+type = "in-memory"
 
 [database]
 host="127.0.0.1"

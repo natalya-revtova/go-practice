@@ -6,28 +6,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidate_Server(t *testing.T) {
-	config := ServerConfig{
+func TestValidate_ServerHTTP(t *testing.T) {
+	config := ServerHTTPConfig{
 		Host: "127.0.0.1",
 		Port: 8080,
 	}
 
 	tests := []struct {
 		description string
-		config      ServerConfig
-		changeFn    func(ServerConfig) ServerConfig
+		config      ServerHTTPConfig
+		changeFn    func(ServerHTTPConfig) ServerHTTPConfig
 		wantErr     bool
 	}{
 		{
 			description: "valid config",
 			config:      config,
-			changeFn:    func(sc ServerConfig) ServerConfig { return sc },
+			changeFn:    func(sc ServerHTTPConfig) ServerHTTPConfig { return sc },
 			wantErr:     false,
 		},
 		{
 			description: "invalid host",
 			config:      config,
-			changeFn: func(sc ServerConfig) ServerConfig {
+			changeFn: func(sc ServerHTTPConfig) ServerHTTPConfig {
 				sc.Host = ""
 				return sc
 			},
@@ -36,7 +36,7 @@ func TestValidate_Server(t *testing.T) {
 		{
 			description: "invalid port",
 			config:      config,
-			changeFn: func(sc ServerConfig) ServerConfig {
+			changeFn: func(sc ServerHTTPConfig) ServerHTTPConfig {
 				sc.Port = 11000000
 				return sc
 			},

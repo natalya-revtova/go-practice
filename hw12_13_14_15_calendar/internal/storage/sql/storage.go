@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
+	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/models"
 )
 
 type DB interface {
@@ -22,7 +22,7 @@ func New(db DB) *Storage {
 	return &Storage{db: db}
 }
 
-func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
+func (s *Storage) CreateEvent(ctx context.Context, event *models.Event) error {
 	query := `
 	INSERT INTO events(id, title, description, user_id, start_date, end_date, day, week, month, notification_time)
 	VALUES (:id, :title, :description, :user_id, :start_date, :end_date, :day, :week, :month, :notification_time)`
@@ -40,43 +40,42 @@ func (s *Storage) DeleteEvent(ctx context.Context, eventID string) error {
 	return err
 }
 
-func (s *Storage) GetEventByDay(ctx context.Context, userID int64, day time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByDay(ctx context.Context, userID int64, day time.Time) ([]models.Event, error) {
 	query := `
 	SELECT id, title, description, user_id, start_date, end_date, day, week, month, notification_time 
 	FROM events
 	WHERE user_id = $1 AND day = $2`
 
-	var events []storage.Event
+	var events []models.Event
 	return events, s.db.SelectContext(ctx, &events, query, userID, day)
 }
 
-func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, week time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByWeek(ctx context.Context, userID int64, week time.Time) ([]models.Event, error) {
 	query := `
 	SELECT id, title, description, user_id, start_date, end_date, day, week, month, notification_time 
 	FROM events
 	WHERE user_id = $1 AND week = $2`
 
-	var events []storage.Event
+	var events []models.Event
 	return events, s.db.SelectContext(ctx, &events, query, userID, week)
 }
 
-func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.Time) ([]storage.Event, error) {
+func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.Time) ([]models.Event, error) {
 	query := `
 	SELECT id, title, description, user_id, start_date, end_date, day, week, month, notification_time 
 	FROM events
 	WHERE user_id = $1 AND month = $2`
 
-	var events []storage.Event
+	var events []models.Event
 	return events, s.db.SelectContext(ctx, &events, query, userID, month)
 }
 
-func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
-	query := buildUpdateQuery(event)
-	_, err := s.db.NamedExecContext(ctx, query, event)
+func (s *Storage) UpdateEvent(ctx context.Context, event *models.Event) error {
+	_, err := s.db.NamedExecContext(ctx, buildUpdateQuery(event), event)
 	return err
 }
 
-func buildUpdateQuery(event storage.Event) string {
+func buildUpdateQuery(event *models.Event) string {
 	qb := NewUpdateQueryBuilder("events")
 
 	qb.SetIf(event.Title != "", "title = :title")
