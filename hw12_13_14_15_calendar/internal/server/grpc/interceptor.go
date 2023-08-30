@@ -12,7 +12,7 @@ import (
 )
 
 func UnaryLoggerInterceptor(log logger.ILogger) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) { //nolint:lll
 		t1 := time.Now()
 		reqID := newRequestID()
 

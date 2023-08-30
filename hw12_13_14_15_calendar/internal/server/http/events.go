@@ -16,10 +16,10 @@ import (
 type CreateRequest struct {
 	Title            string         `json:"title"`
 	Description      *string        `json:"description"`
-	UserID           int64          `json:"user_id"`
-	StartDate        time.Time      `json:"start_date"`
-	EndDate          time.Time      `json:"end_date"`
-	NotificationTime *time.Duration `json:"notification_time"`
+	UserID           int64          `json:"userId"`
+	StartDate        time.Time      `json:"startDate"`
+	EndDate          time.Time      `json:"endDate"`
+	NotificationTime *time.Duration `json:"notificationTime"`
 }
 
 func (h *Handler) createEvent() http.HandlerFunc {
@@ -56,13 +56,13 @@ func (r *CreateRequest) validate() error {
 		return errors.New("field title is empty")
 	}
 	if r.UserID == 0 {
-		return errors.New("field user_id is empty")
+		return errors.New("field userId is empty")
 	}
 	if r.StartDate.IsZero() {
-		return errors.New("field start_date is empty")
+		return errors.New("field startDate is empty")
 	}
 	if r.EndDate.IsZero() {
-		return errors.New("field end_date is empty")
+		return errors.New("field endDate is empty")
 	}
 	return nil
 }
@@ -82,10 +82,10 @@ type Event struct {
 	ID               string         `json:"id"`
 	Title            string         `json:"title"`
 	Description      *string        `json:"description"`
-	UserID           int64          `json:"user_id"`
-	StartDate        time.Time      `json:"start_date"`
-	EndDate          time.Time      `json:"end_date"`
-	NotificationTime *time.Duration `json:"notification_time"`
+	UserID           int64          `json:"userId"`
+	StartDate        time.Time      `json:"startDate"`
+	EndDate          time.Time      `json:"endDate"`
+	NotificationTime *time.Duration `json:"notificationTime"`
 }
 
 func (h *Handler) updateEvent() http.HandlerFunc {
@@ -128,12 +128,13 @@ func (r *Event) toModel() *models.Event {
 type StartDate time.Time
 
 type GetByDateRequest struct {
-	UserID int64     `json:"user_id"`
-	Date   StartDate `json:"start_date"`
+	UserID int64     `json:"userId"`
+	Date   StartDate `json:"startDate"`
 }
 
 type EventsResponse []Event
 
+//nolint:dupl
 func (h *Handler) getEventsByDay() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := h.log.With(slog.String("request_id", middleware.GetReqID(r.Context())))
@@ -165,6 +166,7 @@ func (h *Handler) getEventsByDay() http.HandlerFunc {
 	}
 }
 
+//nolint:dupl
 func (h *Handler) getEventsByWeek() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := h.log.With(slog.String("request_id", middleware.GetReqID(r.Context())))
@@ -196,6 +198,7 @@ func (h *Handler) getEventsByWeek() http.HandlerFunc {
 	}
 }
 
+//nolint:dupl
 func (h *Handler) getEventsByMonth() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := h.log.With(slog.String("request_id", middleware.GetReqID(r.Context())))
@@ -245,10 +248,10 @@ func toResponse(events []models.Event) EventsResponse {
 
 func (r *GetByDateRequest) validate() error {
 	if r.UserID == 0 {
-		return errors.New("field user_id is empty")
+		return errors.New("field userId is empty")
 	}
 	if time.Time(r.Date).IsZero() {
-		return errors.New("field start_date is empty")
+		return errors.New("field startDate is empty")
 	}
 	return nil
 }

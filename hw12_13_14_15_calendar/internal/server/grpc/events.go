@@ -58,13 +58,13 @@ func validateCreateRequest(event *calendarpb.CreateEventRequest) error {
 		return errors.New("field title is empty")
 	}
 	if event.GetUserId() == 0 {
-		return errors.New("field user_id is empty")
+		return errors.New("field userId is empty")
 	}
 	if event.GetStartDate() == nil {
-		return errors.New("field start_date is empty")
+		return errors.New("field startDate is empty")
 	}
 	if event.GetEndDate() == nil {
-		return errors.New("field end_date is empty")
+		return errors.New("field endDate is empty")
 	}
 	return nil
 }
@@ -73,7 +73,7 @@ func (s *Server) UpdateEvent(ctx context.Context, req *calendarpb.Event) (*empty
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if len(req.GetId()) == 0 {
-		err := errors.New("field event_id is empty")
+		err := errors.New("field id is empty")
 		log.Error("Validate event", "error", err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -111,7 +111,7 @@ func (s *Server) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEventReq
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if len(req.GetId()) == 0 {
-		err := errors.New("field event_id is empty")
+		err := errors.New("field id is empty")
 		log.Error("Validate event", "error", err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -122,7 +122,7 @@ func (s *Server) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEventReq
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) GetEventsByDay(ctx context.Context, req *calendarpb.EventsRequestByDate) (*calendarpb.EventsResponse, error) {
+func (s *Server) GetEventsByDay(ctx context.Context, req *calendarpb.EventsRequestByDate) (*calendarpb.EventsResponse, error) { //nolint:lll
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if err := validateRequestByDate(req); err != nil {
@@ -138,7 +138,7 @@ func (s *Server) GetEventsByDay(ctx context.Context, req *calendarpb.EventsReque
 	return toProtoEvents(events), nil
 }
 
-func (s *Server) GetEventsByWeek(ctx context.Context, req *calendarpb.EventsRequestByDate) (*calendarpb.EventsResponse, error) {
+func (s *Server) GetEventsByWeek(ctx context.Context, req *calendarpb.EventsRequestByDate) (*calendarpb.EventsResponse, error) { //nolint:lll
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if err := validateRequestByDate(req); err != nil {
@@ -154,7 +154,7 @@ func (s *Server) GetEventsByWeek(ctx context.Context, req *calendarpb.EventsRequ
 	return toProtoEvents(events), nil
 }
 
-func (s *Server) GetEventsByMonth(ctx context.Context, req *calendarpb.EventsRequestByDate) (*calendarpb.EventsResponse, error) {
+func (s *Server) GetEventsByMonth(ctx context.Context, req *calendarpb.EventsRequestByDate) (*calendarpb.EventsResponse, error) { //nolint:lll
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if err := validateRequestByDate(req); err != nil {
@@ -172,10 +172,10 @@ func (s *Server) GetEventsByMonth(ctx context.Context, req *calendarpb.EventsReq
 
 func validateRequestByDate(req *calendarpb.EventsRequestByDate) error {
 	if req.GetUserId() == 0 {
-		return errors.New("field user_id is empty")
+		return errors.New("field userId is empty")
 	}
 	if req.GetStartDate() == nil {
-		return errors.New("field start_date is empty")
+		return errors.New("field startDate is empty")
 	}
 	return nil
 }

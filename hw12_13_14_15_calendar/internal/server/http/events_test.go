@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -38,10 +39,10 @@ func TestCreateHandler(t *testing.T) {
 				NotificationTime: nil,
 			},
 			body: map[string]interface{}{
-				"title":      "test",
-				"user_id":    1,
-				"start_date": "2023-08-16T12:00:00Z",
-				"end_date":   "2023-08-16T13:00:00Z",
+				"title":     "test",
+				"userId":    1,
+				"startDate": "2023-08-16T12:00:00Z",
+				"endDate":   "2023-08-16T13:00:00Z",
 			},
 			code: http.StatusCreated,
 		},
@@ -54,41 +55,41 @@ func TestCreateHandler(t *testing.T) {
 		{
 			name: "empty title",
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-16T12:00:00Z",
-				"end_date":   "2023-08-16T13:00:00Z",
+				"userId":    1,
+				"startDate": "2023-08-16T12:00:00Z",
+				"endDate":   "2023-08-16T13:00:00Z",
 			},
 			respError: "field title is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			body: map[string]interface{}{
-				"title":      "test",
-				"start_date": "2023-08-16T12:00:00Z",
-				"end_date":   "2023-08-16T13:00:00Z",
+				"title":     "test",
+				"startDate": "2023-08-16T12:00:00Z",
+				"endDate":   "2023-08-16T13:00:00Z",
 			},
-			respError: "field user_id is empty",
+			respError: "field userId is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			body: map[string]interface{}{
-				"title":    "test",
-				"user_id":  1,
-				"end_date": "2023-08-16T13:00:00Z",
+				"title":   "test",
+				"userId":  1,
+				"endDate": "2023-08-16T13:00:00Z",
 			},
-			respError: "field start_date is empty",
+			respError: "field startDate is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty end_date",
+			name: "empty endDate",
 			body: map[string]interface{}{
-				"title":      "test",
-				"user_id":    1,
-				"start_date": "2023-08-16T12:00:00Z",
+				"title":     "test",
+				"userId":    1,
+				"startDate": "2023-08-16T12:00:00Z",
 			},
-			respError: "field end_date is empty",
+			respError: "field endDate is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
@@ -102,10 +103,10 @@ func TestCreateHandler(t *testing.T) {
 				NotificationTime: nil,
 			},
 			body: map[string]interface{}{
-				"title":      "test",
-				"user_id":    1,
-				"start_date": "2023-08-16T12:00:00Z",
-				"end_date":   "2023-08-16T13:00:00Z",
+				"title":     "test",
+				"userId":    1,
+				"startDate": "2023-08-16T12:00:00Z",
+				"endDate":   "2023-08-16T13:00:00Z",
 			},
 			mockError: errors.New("unexpected error"),
 			code:      http.StatusInternalServerError,
@@ -136,7 +137,7 @@ func TestCreateHandler(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			req, err := http.NewRequest(http.MethodPost, eventsURL, bytes.NewReader(body))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, eventsURL, bytes.NewReader(body))
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()
@@ -217,7 +218,8 @@ func TestUpdateHandler(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			req, err := http.NewRequest(http.MethodPatch, eventsURL+"/"+tc.event.ID, bytes.NewReader(body))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPatch,
+				eventsURL+"/"+tc.event.ID, bytes.NewReader(body))
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()
@@ -245,8 +247,8 @@ func TestGetByDayHandler(t *testing.T) {
 			userID: 1,
 			day:    time.Date(2023, 8, 16, 0, 0, 0, 0, time.UTC),
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-16",
+				"userId":    1,
+				"startDate": "2023-08-16",
 			},
 			events: []models.Event{
 				{
@@ -270,26 +272,26 @@ func TestGetByDayHandler(t *testing.T) {
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			body: map[string]interface{}{
-				"start_date": "2023-08-16",
+				"startDate": "2023-08-16",
 			},
-			respError: "field user_id is empty",
+			respError: "field userId is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			body: map[string]interface{}{
-				"user_id": 1,
+				"userId": 1,
 			},
 			respError: "json parse error",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "invalid start_date",
+			name: "invalid startDate",
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "11111",
+				"userId":    1,
+				"startDate": "11111",
 			},
 			respError: "json parse error",
 			code:      http.StatusBadRequest,
@@ -299,8 +301,8 @@ func TestGetByDayHandler(t *testing.T) {
 			userID: 1,
 			day:    time.Date(2023, 8, 16, 0, 0, 0, 0, time.UTC),
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-16",
+				"userId":    1,
+				"startDate": "2023-08-16",
 			},
 			mockError: errors.New("unexpected error"),
 			code:      http.StatusInternalServerError,
@@ -331,7 +333,8 @@ func TestGetByDayHandler(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			req, err := http.NewRequest(http.MethodGet, eventsURL+"/day", bytes.NewReader(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet,
+				eventsURL+"/day", bytes.NewReader(requestBody))
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()
@@ -367,8 +370,8 @@ func TestGetByWeekHandler(t *testing.T) {
 			userID: 1,
 			day:    time.Date(2023, 8, 14, 0, 0, 0, 0, time.UTC),
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-14",
+				"userId":    1,
+				"startDate": "2023-08-14",
 			},
 			events: []models.Event{
 				{
@@ -392,26 +395,26 @@ func TestGetByWeekHandler(t *testing.T) {
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			body: map[string]interface{}{
-				"start_date": "2023-08-14",
+				"startDate": "2023-08-14",
 			},
-			respError: "field user_id is empty",
+			respError: "field userId is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			body: map[string]interface{}{
-				"user_id": 1,
+				"userId": 1,
 			},
-			respError: "field start_date is empty",
+			respError: "field startDate is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "invalid start_date",
+			name: "invalid startDate",
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "11111",
+				"userId":    1,
+				"startDate": "11111",
 			},
 			respError: "json parse error",
 			code:      http.StatusBadRequest,
@@ -421,8 +424,8 @@ func TestGetByWeekHandler(t *testing.T) {
 			userID: 1,
 			day:    time.Date(2023, 8, 14, 0, 0, 0, 0, time.UTC),
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-14",
+				"userId":    1,
+				"startDate": "2023-08-14",
 			},
 			mockError: errors.New("unexpected error"),
 			code:      http.StatusInternalServerError,
@@ -444,7 +447,7 @@ func TestGetByWeekHandler(t *testing.T) {
 			}
 
 			handler := chi.NewRouter()
-			handler.Get(eventsURL+"/"+"week", NewHandler(logger.NewMock(), appMock).getEventsByWeek())
+			handler.Get(eventsURL+"/week", NewHandler(logger.NewMock(), appMock).getEventsByWeek())
 
 			var body []byte
 			var err error
@@ -453,7 +456,8 @@ func TestGetByWeekHandler(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			req, err := http.NewRequest(http.MethodGet, eventsURL+"/"+"week", bytes.NewReader(body))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet,
+				eventsURL+"/week", bytes.NewReader(body))
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()
@@ -489,8 +493,8 @@ func TestGetByMonthHandler(t *testing.T) {
 			userID: 1,
 			day:    time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC),
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-01",
+				"userId":    1,
+				"startDate": "2023-08-01",
 			},
 			events: []models.Event{
 				{
@@ -514,26 +518,26 @@ func TestGetByMonthHandler(t *testing.T) {
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			body: map[string]interface{}{
-				"start_date": "2023-08-01",
+				"startDate": "2023-08-01",
 			},
-			respError: "field user_id is empty",
+			respError: "field userId is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			body: map[string]interface{}{
-				"user_id": 1,
+				"userId": 1,
 			},
-			respError: "field start_date is empty",
+			respError: "field startDate is empty",
 			code:      http.StatusBadRequest,
 		},
 		{
-			name: "invalid start_date",
+			name: "invalid startDate",
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "11111",
+				"userId":    1,
+				"startDate": "11111",
 			},
 			respError: "json parse error",
 			code:      http.StatusBadRequest,
@@ -543,8 +547,8 @@ func TestGetByMonthHandler(t *testing.T) {
 			userID: 1,
 			day:    time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC),
 			body: map[string]interface{}{
-				"user_id":    1,
-				"start_date": "2023-08-01",
+				"userId":    1,
+				"startDate": "2023-08-01",
 			},
 			mockError: errors.New("unexpected error"),
 			code:      http.StatusInternalServerError,
@@ -566,7 +570,7 @@ func TestGetByMonthHandler(t *testing.T) {
 			}
 
 			handler := chi.NewRouter()
-			handler.Get(eventsURL+"/"+"month", NewHandler(logger.NewMock(), appMock).getEventsByMonth())
+			handler.Get(eventsURL+"/month", NewHandler(logger.NewMock(), appMock).getEventsByMonth())
 
 			var body []byte
 			var err error
@@ -575,7 +579,8 @@ func TestGetByMonthHandler(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			req, err := http.NewRequest(http.MethodGet, eventsURL+"/"+"month", bytes.NewReader(body))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet,
+				eventsURL+"/month", bytes.NewReader(body))
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()
@@ -629,7 +634,8 @@ func TestDeleteHandler(t *testing.T) {
 			handler := chi.NewRouter()
 			handler.Delete(eventsURL+"/{id}", NewHandler(logger.NewMock(), appMock).deleteEvent())
 
-			req, err := http.NewRequest(http.MethodDelete, eventsURL+"/"+tc.eventID, nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodDelete,
+				eventsURL+"/"+tc.eventID, nil)
 			require.NoError(t, err)
 
 			rr := httptest.NewRecorder()

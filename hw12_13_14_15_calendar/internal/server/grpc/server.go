@@ -14,10 +14,6 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-const (
-	eventsURL = "/v1/calendar/events"
-)
-
 type Server struct {
 	srv *grpc.Server
 	calendarpb.UnimplementedCalendarServer
@@ -56,7 +52,11 @@ func (s *Server) Start(ctx context.Context, cfg *config.ServerGRPCConfig) error 
 	}
 
 	calendarpb.RegisterCalendarServer(s.srv, s)
-	return s.srv.Serve(lsn)
+	if err := s.srv.Serve(lsn); err != nil {
+		<-ctx.Done()
+		return err
+	}
+	return nil
 }
 
 func (s *Server) Stop() {

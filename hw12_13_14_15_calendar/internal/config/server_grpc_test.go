@@ -8,9 +8,8 @@ import (
 
 func TestValidate_ServerGRPC(t *testing.T) {
 	config := ServerGRPCConfig{
-		Host:     "127.0.0.1",
-		Port:     50051,
-		HTTPPort: 8081,
+		Host: "127.0.0.1",
+		Port: 50051,
 	}
 
 	tests := []struct {
@@ -39,15 +38,6 @@ func TestValidate_ServerGRPC(t *testing.T) {
 			config:      config,
 			changeFn: func(sc ServerGRPCConfig) ServerGRPCConfig {
 				sc.Port = 11000000
-				return sc
-			},
-			wantErr: true,
-		},
-		{
-			description: "invalid http_port",
-			config:      config,
-			changeFn: func(sc ServerGRPCConfig) ServerGRPCConfig {
-				sc.HTTPPort = 11000000
 				return sc
 			},
 			wantErr: true,

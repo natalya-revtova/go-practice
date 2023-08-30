@@ -16,7 +16,7 @@ func parseBody(r *http.Request, body any) error {
 		return fmt.Errorf("request body is empty")
 	}
 	if err != nil {
-		return fmt.Errorf("failed to decode request: %v", err)
+		return fmt.Errorf("failed to decode request: %w", err)
 	}
 	return nil
 }

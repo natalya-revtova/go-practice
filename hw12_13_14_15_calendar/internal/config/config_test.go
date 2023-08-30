@@ -22,7 +22,7 @@ func TestNewConfig(t *testing.T) {
 				ServerHTTP: ServerHTTPConfig{
 					Host:        "127.0.0.1",
 					Port:        8080,
-					Timeout:     4 * time.Second,
+					Timeout:     10 * time.Second,
 					IdleTimeout: 30 * time.Second,
 				},
 				ServerGRPC: ServerGRPCConfig{

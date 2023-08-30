@@ -52,7 +52,7 @@ func startServer(t *testing.T) (*mocks.Calendar, calendarpb.CalendarClient, func
 		}), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 
-	close := func() {
+	closeFn := func() {
 		err := lis.Close()
 		if err != nil {
 			log.Printf("error closing listener: %v", err)
@@ -60,12 +60,12 @@ func startServer(t *testing.T) (*mocks.Calendar, calendarpb.CalendarClient, func
 		calendarSrv.srv.Stop()
 	}
 
-	return appMock, calendarpb.NewCalendarClient(conn), close
+	return appMock, calendarpb.NewCalendarClient(conn), closeFn
 }
 
 func TestCreateEvent(t *testing.T) {
-	appMock, client, close := startServer(t)
-	defer close()
+	appMock, client, closeConn := startServer(t)
+	defer closeConn()
 
 	cases := []struct {
 		name          string
@@ -98,7 +98,7 @@ func TestCreateEvent(t *testing.T) {
 			code:          codes.InvalidArgument,
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			event: &calendarpb.CreateEventRequest{
 				Title:            "test",
 				Description:      "test",
@@ -106,11 +106,11 @@ func TestCreateEvent(t *testing.T) {
 				EndDate:          timestamppb.New(time.Date(2023, 8, 16, 13, 0, 0, 0, time.UTC)),
 				NotificationTime: durationpb.New(5 * time.Second),
 			},
-			validateError: errors.New("field user_id is empty"),
+			validateError: errors.New("field userId is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
-			name: "empty start_date",
+			name: "empty start_ate",
 			event: &calendarpb.CreateEventRequest{
 				Title:            "test",
 				Description:      "test",
@@ -118,11 +118,11 @@ func TestCreateEvent(t *testing.T) {
 				EndDate:          timestamppb.New(time.Date(2023, 8, 16, 13, 0, 0, 0, time.UTC)),
 				NotificationTime: durationpb.New(5 * time.Second),
 			},
-			validateError: errors.New("field start_date is empty"),
+			validateError: errors.New("field startDate is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
-			name: "empty end_date",
+			name: "empty endDate",
 			event: &calendarpb.CreateEventRequest{
 				Title:            "test",
 				Description:      "test",
@@ -130,7 +130,7 @@ func TestCreateEvent(t *testing.T) {
 				StartDate:        timestamppb.New(time.Date(2023, 8, 16, 12, 0, 0, 0, time.UTC)),
 				NotificationTime: durationpb.New(5 * time.Second),
 			},
-			validateError: errors.New("field end_date is empty"),
+			validateError: errors.New("field endDate is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
@@ -158,11 +158,14 @@ func TestCreateEvent(t *testing.T) {
 
 			_, err := client.CreateEvent(context.Background(), tc.event)
 
-			if tc.mockError != nil {
+			switch {
+			case tc.mockError != nil:
 				require.Equal(t, status.Error(tc.code, tc.mockError.Error()), err)
-			} else if tc.validateError != nil {
+
+			case tc.validateError != nil:
 				require.Equal(t, status.Error(tc.code, tc.validateError.Error()), err)
-			} else {
+
+			default:
 				require.NoError(t, err)
 			}
 		})
@@ -170,8 +173,8 @@ func TestCreateEvent(t *testing.T) {
 }
 
 func TestUpdateEvent(t *testing.T) {
-	appMock, client, close := startServer(t)
-	defer close()
+	appMock, client, closeConn := startServer(t)
+	defer closeConn()
 
 	cases := []struct {
 		name          string
@@ -188,11 +191,11 @@ func TestUpdateEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "empty event_id",
+			name: "empty id",
 			event: &calendarpb.Event{
 				NotificationTime: durationpb.New(5 * time.Second),
 			},
-			validateError: errors.New("field event_id is empty"),
+			validateError: errors.New("field id is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
@@ -216,11 +219,14 @@ func TestUpdateEvent(t *testing.T) {
 
 			_, err := client.UpdateEvent(context.Background(), tc.event)
 
-			if tc.mockError != nil {
+			switch {
+			case tc.mockError != nil:
 				require.Equal(t, status.Error(tc.code, tc.mockError.Error()), err)
-			} else if tc.validateError != nil {
+
+			case tc.validateError != nil:
 				require.Equal(t, status.Error(tc.code, tc.validateError.Error()), err)
-			} else {
+
+			default:
 				require.NoError(t, err)
 			}
 		})
@@ -228,8 +234,8 @@ func TestUpdateEvent(t *testing.T) {
 }
 
 func TestDeleteEvent(t *testing.T) {
-	appMock, client, close := startServer(t)
-	defer close()
+	appMock, client, closeConn := startServer(t)
+	defer closeConn()
 
 	cases := []struct {
 		name          string
@@ -245,9 +251,9 @@ func TestDeleteEvent(t *testing.T) {
 			},
 		},
 		{
-			name:          "empty event_id",
+			name:          "empty id",
 			request:       &calendarpb.DeleteEventRequest{},
-			validateError: errors.New("field event_id is empty"),
+			validateError: errors.New("field id is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
@@ -270,11 +276,14 @@ func TestDeleteEvent(t *testing.T) {
 
 			_, err := client.DeleteEvent(context.Background(), tc.request)
 
-			if tc.mockError != nil {
+			switch {
+			case tc.mockError != nil:
 				require.Equal(t, status.Error(tc.code, tc.mockError.Error()), err)
-			} else if tc.validateError != nil {
+
+			case tc.validateError != nil:
 				require.Equal(t, status.Error(tc.code, tc.validateError.Error()), err)
-			} else {
+
+			default:
 				require.NoError(t, err)
 			}
 		})
@@ -282,8 +291,8 @@ func TestDeleteEvent(t *testing.T) {
 }
 
 func TestGetEventsByDay(t *testing.T) {
-	appMock, client, close := startServer(t)
-	defer close()
+	appMock, client, closeConn := startServer(t)
+	defer closeConn()
 
 	cases := []struct {
 		name          string
@@ -316,19 +325,19 @@ func TestGetEventsByDay(t *testing.T) {
 			},
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			request: &calendarpb.EventsRequestByDate{
 				StartDate: timestamppb.New(time.Date(2023, 8, 16, 0, 0, 0, 0, time.UTC)),
 			},
-			validateError: errors.New("field user_id is empty"),
+			validateError: errors.New("field userId is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			request: &calendarpb.EventsRequestByDate{
 				UserId: 1,
 			},
-			validateError: errors.New("field start_date is empty"),
+			validateError: errors.New("field startDate is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
@@ -353,11 +362,14 @@ func TestGetEventsByDay(t *testing.T) {
 
 			resp, err := client.GetEventsByDay(context.Background(), tc.request)
 
-			if tc.mockError != nil {
+			switch {
+			case tc.mockError != nil:
 				require.Equal(t, status.Error(tc.code, tc.mockError.Error()), err)
-			} else if tc.validateError != nil {
+
+			case tc.validateError != nil:
 				require.Equal(t, status.Error(tc.code, tc.validateError.Error()), err)
-			} else {
+
+			default:
 				require.NoError(t, err)
 				require.Equal(t, toProtoEvents(tc.events).GetEvents(), resp.GetEvents())
 			}
@@ -366,8 +378,8 @@ func TestGetEventsByDay(t *testing.T) {
 }
 
 func TestGetEventsByWeek(t *testing.T) {
-	appMock, client, close := startServer(t)
-	defer close()
+	appMock, client, closeConn := startServer(t)
+	defer closeConn()
 
 	cases := []struct {
 		name          string
@@ -400,19 +412,19 @@ func TestGetEventsByWeek(t *testing.T) {
 			},
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			request: &calendarpb.EventsRequestByDate{
 				StartDate: timestamppb.New(time.Date(2023, 8, 14, 0, 0, 0, 0, time.UTC)),
 			},
-			validateError: errors.New("field user_id is empty"),
+			validateError: errors.New("field userId is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			request: &calendarpb.EventsRequestByDate{
 				UserId: 1,
 			},
-			validateError: errors.New("field start_date is empty"),
+			validateError: errors.New("field startDate is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
@@ -437,11 +449,14 @@ func TestGetEventsByWeek(t *testing.T) {
 
 			resp, err := client.GetEventsByWeek(context.Background(), tc.request)
 
-			if tc.mockError != nil {
+			switch {
+			case tc.mockError != nil:
 				require.Equal(t, status.Error(tc.code, tc.mockError.Error()), err)
-			} else if tc.validateError != nil {
+
+			case tc.validateError != nil:
 				require.Equal(t, status.Error(tc.code, tc.validateError.Error()), err)
-			} else {
+
+			default:
 				require.NoError(t, err)
 				require.Equal(t, toProtoEvents(tc.events).GetEvents(), resp.GetEvents())
 			}
@@ -450,8 +465,8 @@ func TestGetEventsByWeek(t *testing.T) {
 }
 
 func TestGetEventsByMonth(t *testing.T) {
-	appMock, client, close := startServer(t)
-	defer close()
+	appMock, client, closeConn := startServer(t)
+	defer closeConn()
 
 	cases := []struct {
 		name          string
@@ -484,19 +499,19 @@ func TestGetEventsByMonth(t *testing.T) {
 			},
 		},
 		{
-			name: "empty user_id",
+			name: "empty userId",
 			request: &calendarpb.EventsRequestByDate{
 				StartDate: timestamppb.New(time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)),
 			},
-			validateError: errors.New("field user_id is empty"),
+			validateError: errors.New("field userId is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
-			name: "empty start_date",
+			name: "empty startDate",
 			request: &calendarpb.EventsRequestByDate{
 				UserId: 1,
 			},
-			validateError: errors.New("field start_date is empty"),
+			validateError: errors.New("field startDate is empty"),
 			code:          codes.InvalidArgument,
 		},
 		{
@@ -521,11 +536,14 @@ func TestGetEventsByMonth(t *testing.T) {
 
 			resp, err := client.GetEventsByMonth(context.Background(), tc.request)
 
-			if tc.mockError != nil {
+			switch {
+			case tc.mockError != nil:
 				require.Equal(t, status.Error(tc.code, tc.mockError.Error()), err)
-			} else if tc.validateError != nil {
+
+			case tc.validateError != nil:
 				require.Equal(t, status.Error(tc.code, tc.validateError.Error()), err)
-			} else {
+
+			default:
 				require.NoError(t, err)
 				require.Equal(t, toProtoEvents(tc.events).GetEvents(), resp.GetEvents())
 			}
