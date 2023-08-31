@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *Server) CreateEvent(ctx context.Context, req *calendarpb.CreateEventRequest) (*calendarpb.CreateEventResponse, error) {
+func (s *Server) CreateEvent(ctx context.Context, req *calendarpb.CreateEventRequest) (*calendarpb.CreateEventResponse, error) { //nolint:lll
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if err := validateCreateRequest(req); err != nil {

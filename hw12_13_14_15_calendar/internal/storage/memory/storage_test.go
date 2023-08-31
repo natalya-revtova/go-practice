@@ -138,7 +138,7 @@ func TestGetEventByMonth(t *testing.T) {
 	require.NoError(t, err)
 
 	got, err := memoryStorage.GetEventByMonth(context.Background(), newEvents[0].UserID,
-		time.Date(2010, 1, 0, 0, 0, 0, 0, time.UTC))
+		time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC))
 	require.NoError(t, err)
 
 	require.Equal(t, newEvents, got)
@@ -187,7 +187,7 @@ func generateEvents(start, end time.Time, count int) []models.Event {
 			NotificationTime: nil,
 			Day:              time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC),
 			Week:             isoweek.StartTime(year, week, time.UTC),
-			Month:            time.Date(start.Year(), start.Month(), 0, 0, 0, 0, 0, time.UTC),
+			Month:            time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC),
 		})
 
 		start = start.AddDate(0, 0, 1)
