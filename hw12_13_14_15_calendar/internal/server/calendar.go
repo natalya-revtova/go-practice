@@ -9,7 +9,7 @@ import (
 
 //go:generate go run github.com/vektra/mockery/v2@v2.33.0 --name=Calendar
 type Calendar interface {
-	CreateEvent(context.Context, *models.Event) error
+	CreateEvent(context.Context, *models.Event) (string, error)
 	UpdateEvent(context.Context, *models.Event) error
 	DeleteEvent(context.Context, string) error
 	GetEventByDay(context.Context, int64, time.Time) ([]models.Event, error)

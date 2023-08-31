@@ -41,6 +41,8 @@ func (s *Storage) CreateEvent(ctx context.Context, event *models.Event) error {
 	default:
 	}
 
+	storage.FillDates(event)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -73,6 +75,8 @@ func (s *Storage) UpdateEvent(ctx context.Context, event *models.Event) error {
 		return ctx.Err()
 	default:
 	}
+
+	storage.FillDates(event)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

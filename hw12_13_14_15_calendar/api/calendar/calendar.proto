@@ -9,7 +9,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 
 service Calendar {
-    rpc CreateEvent (CreateEventRequest) returns (google.protobuf.Empty) {}
+    rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse) {}
 
     rpc UpdateEvent(Event) returns (google.protobuf.Empty) {}
 
@@ -31,6 +31,10 @@ message CreateEventRequest {
     google.protobuf.Duration notification_time = 6;
 }
 
+message CreateEventResponse {
+  string id = 1;
+}
+
 message Event {
   string id = 1;
   string title = 2;
@@ -40,10 +44,6 @@ message Event {
   google.protobuf.Timestamp end_date = 6;
   google.protobuf.Duration notification_time = 7;
 }
-
-message CreateEventResponse {}
-
-message UpdateEventResponse {}
 
 message EventsRequestByDate {
   int64 user_id = 1;

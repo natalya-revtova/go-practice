@@ -17,17 +17,27 @@ type Calendar struct {
 }
 
 // CreateEvent provides a mock function with given fields: _a0, _a1
-func (_m *Calendar) CreateEvent(_a0 context.Context, _a1 *models.Event) error {
+func (_m *Calendar) CreateEvent(_a0 context.Context, _a1 *models.Event) (string, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *models.Event) error); ok {
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *models.Event) (string, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *models.Event) string); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, *models.Event) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // DeleteEvent provides a mock function with given fields: _a0, _a1

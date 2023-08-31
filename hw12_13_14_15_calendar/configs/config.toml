@@ -13,7 +13,7 @@ time = "60s"
 timeout = "60s"
 
 [storage]
-type = "in-memory"
+type = "sql"
 
 [database]
 host="127.0.0.1"

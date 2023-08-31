@@ -152,11 +152,11 @@ func TestCreateEvent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.validateError == nil || tc.mockError != nil {
 				appMock.On("CreateEvent", mock.Anything, toModelForCreate(tc.event)).
-					Return(tc.mockError).
+					Return(mock.Anything, tc.mockError).
 					Once()
 			}
 
-			_, err := client.CreateEvent(context.Background(), tc.event)
+			resp, err := client.CreateEvent(context.Background(), tc.event)
 
 			switch {
 			case tc.mockError != nil:
@@ -167,6 +167,7 @@ func TestCreateEvent(t *testing.T) {
 
 			default:
 				require.NoError(t, err)
+				require.NotEqual(t, "", resp.GetId())
 			}
 		})
 	}

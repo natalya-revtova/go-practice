@@ -123,7 +123,7 @@ func TestCreateHandler(t *testing.T) {
 
 			if tc.respError == "" || tc.mockError != nil {
 				appMock.On("CreateEvent", mock.Anything, tc.event.toModel()).
-					Return(tc.mockError).
+					Return(mock.Anything, tc.mockError).
 					Once()
 			}
 
@@ -144,6 +144,14 @@ func TestCreateHandler(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			require.Equal(t, tc.code, rr.Code)
+
+			if tc.respError == "" && tc.mockError == nil {
+				var responseBody CreateResponse
+				err = json.Unmarshal(rr.Body.Bytes(), &responseBody)
+				require.NoError(t, err)
+
+				require.NotEqual(t, "", responseBody.EventID)
+			}
 		})
 	}
 }

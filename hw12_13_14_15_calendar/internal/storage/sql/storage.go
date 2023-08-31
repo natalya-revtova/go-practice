@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/models"
+	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/storage"
 )
 
 type DB interface {
@@ -23,6 +24,8 @@ func New(db DB) *Storage {
 }
 
 func (s *Storage) CreateEvent(ctx context.Context, event *models.Event) error {
+	storage.FillDates(event)
+
 	query := `
 	INSERT INTO events(id, title, description, user_id, start_date, end_date, day, week, month, notification_time)
 	VALUES (:id, :title, :description, :user_id, :start_date, :end_date, :day, :week, :month, :notification_time)`
@@ -71,6 +74,8 @@ func (s *Storage) GetEventByMonth(ctx context.Context, userID int64, month time.
 }
 
 func (s *Storage) UpdateEvent(ctx context.Context, event *models.Event) error {
+	storage.FillDates(event)
+
 	_, err := s.db.NamedExecContext(ctx, buildUpdateQuery(event), event)
 	return err
 }

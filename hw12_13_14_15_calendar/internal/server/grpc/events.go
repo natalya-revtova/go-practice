@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *Server) CreateEvent(ctx context.Context, req *calendarpb.CreateEventRequest) (*emptypb.Empty, error) {
+func (s *Server) CreateEvent(ctx context.Context, req *calendarpb.CreateEventRequest) (*calendarpb.CreateEventResponse, error) {
 	log := s.log.With(slog.String("request_id", middleware.GetReqID(ctx)))
 
 	if err := validateCreateRequest(req); err != nil {
@@ -24,10 +24,12 @@ func (s *Server) CreateEvent(ctx context.Context, req *calendarpb.CreateEventReq
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	if err := s.app.CreateEvent(ctx, toModelForCreate(req)); err != nil {
+	eventID, err := s.app.CreateEvent(ctx, toModelForCreate(req))
+	if err != nil {
+		log.Error("Create event", "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &emptypb.Empty{}, nil
+	return &calendarpb.CreateEventResponse{Id: eventID}, nil
 }
 
 func toModelForCreate(event *calendarpb.CreateEventRequest) *models.Event {
@@ -79,6 +81,7 @@ func (s *Server) UpdateEvent(ctx context.Context, req *calendarpb.Event) (*empty
 	}
 
 	if err := s.app.UpdateEvent(ctx, toModelForUpdate(req)); err != nil {
+		log.Error("Update event", "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &emptypb.Empty{}, nil
@@ -98,6 +101,7 @@ func toModelForUpdate(event *calendarpb.Event) *models.Event {
 	}
 
 	return &models.Event{
+		ID:               event.GetId(),
 		Title:            event.GetTitle(),
 		Description:      description,
 		UserID:           event.GetUserId(),
@@ -117,6 +121,7 @@ func (s *Server) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEventReq
 	}
 
 	if err := s.app.DeleteEvent(ctx, req.Id); err != nil {
+		log.Error("Delete event", "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &emptypb.Empty{}, nil
@@ -132,6 +137,10 @@ func (s *Server) GetEventsByDay(ctx context.Context, req *calendarpb.EventsReque
 
 	events, err := s.app.GetEventByDay(ctx, req.GetUserId(), req.GetStartDate().AsTime())
 	if err != nil {
+		log.Error("Can not get events for the selected day",
+			"user_id", req.GetUserId(),
+			"day", req.GetStartDate().AsTime(),
+			"error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -148,6 +157,10 @@ func (s *Server) GetEventsByWeek(ctx context.Context, req *calendarpb.EventsRequ
 
 	events, err := s.app.GetEventByWeek(ctx, req.GetUserId(), req.GetStartDate().AsTime())
 	if err != nil {
+		log.Error("Can not get events for the selected week",
+			"user_id", req.GetUserId(),
+			"week", req.GetStartDate().AsTime(),
+			"error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -164,6 +177,10 @@ func (s *Server) GetEventsByMonth(ctx context.Context, req *calendarpb.EventsReq
 
 	events, err := s.app.GetEventByMonth(ctx, req.GetUserId(), req.GetStartDate().AsTime())
 	if err != nil {
+		log.Error("Can not get events for the selected month",
+			"user_id", req.GetUserId(),
+			"month", req.GetStartDate().AsTime(),
+			"error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 

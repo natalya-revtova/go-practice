@@ -22,6 +22,10 @@ type CreateRequest struct {
 	NotificationTime *time.Duration `json:"notificationTime"`
 }
 
+type CreateResponse struct {
+	EventID string `json:"id"`
+}
+
 func (h *Handler) createEvent() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := h.log.With(slog.String("request_id", middleware.GetReqID(r.Context())))
@@ -41,13 +45,16 @@ func (h *Handler) createEvent() http.HandlerFunc {
 			return
 		}
 
-		if err := h.app.CreateEvent(r.Context(), event.toModel()); err != nil {
+		eventID, err := h.app.CreateEvent(r.Context(), event.toModel())
+		if err != nil {
+			log.Error("Create event", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error(err.Error()))
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
+		render.JSON(w, r, CreateResponse{EventID: eventID})
 	}
 }
 
@@ -104,6 +111,7 @@ func (h *Handler) updateEvent() http.HandlerFunc {
 
 		event.ID = eventID
 		if err := h.app.UpdateEvent(r.Context(), event.toModel()); err != nil {
+			log.Error("Update event", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error(err.Error()))
 			return
@@ -156,6 +164,10 @@ func (h *Handler) getEventsByDay() http.HandlerFunc {
 
 		events, err := h.app.GetEventByDay(r.Context(), request.UserID, time.Time(request.Date))
 		if err != nil {
+			log.Error("Can not get events for the selected day",
+				"user_id", request.UserID,
+				"day", time.Time(request.Date),
+				"error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error(err.Error()))
 			return
@@ -188,6 +200,10 @@ func (h *Handler) getEventsByWeek() http.HandlerFunc {
 
 		events, err := h.app.GetEventByWeek(r.Context(), request.UserID, time.Time(request.Date))
 		if err != nil {
+			log.Error("Can not get events for the selected week",
+				"user_id", request.UserID,
+				"week", time.Time(request.Date),
+				"error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error(err.Error()))
 			return
@@ -220,6 +236,10 @@ func (h *Handler) getEventsByMonth() http.HandlerFunc {
 
 		events, err := h.app.GetEventByMonth(r.Context(), request.UserID, time.Time(request.Date))
 		if err != nil {
+			log.Error("Can not get events for the selected month",
+				"user_id", request.UserID,
+				"month", time.Time(request.Date),
+				"error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error(err.Error()))
 			return
@@ -272,9 +292,10 @@ func (sd *StartDate) UnmarshalJSON(b []byte) error {
 
 func (h *Handler) deleteEvent() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		eventID := parseID(r)
+		log := h.log.With(slog.String("request_id", middleware.GetReqID(r.Context())))
 
-		if err := h.app.DeleteEvent(r.Context(), eventID); err != nil {
+		if err := h.app.DeleteEvent(r.Context(), parseID(r)); err != nil {
+			log.Error("Delete event", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error(err.Error()))
 			return

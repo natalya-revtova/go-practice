@@ -49,7 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	calendar := calendar.New(log, storage)
+	calendar := calendar.New(storage)
 
 	serverHTTP := internalhttp.NewServer(log, calendar, &config.ServerHTTP)
 	serverGRPC := internalgrpc.NewServer(log, calendar, &config.ServerGRPC)
