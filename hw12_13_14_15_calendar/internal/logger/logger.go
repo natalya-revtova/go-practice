@@ -3,9 +3,16 @@ package logger
 import (
 	"os"
 
-	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/app"
 	"golang.org/x/exp/slog"
 )
+
+type ILogger interface {
+	With(args ...any) ILogger
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
+	Error(msg string, args ...any)
+	Debug(msg string, args ...any)
+}
 
 type Logger struct {
 	log *slog.Logger
@@ -16,7 +23,7 @@ func New(level slog.Level) Logger {
 	return Logger{log: log}
 }
 
-func (l Logger) With(args ...any) app.Logger {
+func (l Logger) With(args ...any) ILogger {
 	l.log = l.log.With(args...)
 	return l
 }

@@ -37,6 +37,9 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
+generate:
+	go generate ./...
+
 migrate:
 	 cd migrations && goose postgres "host=$(DB_HOST) port=$(DB_PORT) user=$(DB_USER) password=$(DB_PSSWD) dbname=$(DB_NAME)" up
 

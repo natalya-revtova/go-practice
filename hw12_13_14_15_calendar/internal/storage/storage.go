@@ -3,6 +3,9 @@ package storage
 import (
 	"errors"
 	"time"
+
+	"github.com/natalya-revtova/go-practice/hw12_13_14_15_calendar/internal/models"
+	"github.com/snabb/isoweek"
 )
 
 const (
@@ -15,16 +18,23 @@ var (
 	ErrEventNotExist = errors.New("event does not exist")
 )
 
-type Event struct {
-	ID               string         `db:"id"`
-	Title            string         `db:"title"`
-	Description      *string        `db:"description"`
-	UserID           int64          `db:"user_id"`
-	StartDate        time.Time      `db:"start_date"`
-	EndDate          time.Time      `db:"end_date"`
-	NotificationTime *time.Duration `db:"notification_time"`
+func FillDates(event *models.Event) {
+	if !event.StartDate.IsZero() {
+		event.Day = getDay(event.StartDate)
+		event.Week = getWeek(event.StartDate)
+		event.Month = getMonth(event.StartDate)
+	}
+}
 
-	Day   time.Time `db:"day"`
-	Week  time.Time `db:"week"`
-	Month time.Time `db:"month"`
+func getDay(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func getWeek(date time.Time) time.Time {
+	year, week := date.ISOWeek()
+	return isoweek.StartTime(year, week, time.UTC)
+}
+
+func getMonth(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
 }
